@@ -1,0 +1,32 @@
+<project name="ProjectA">
+    <file name="boston.mov">
+        <uuid>00011</uuid>
+        <date>02102015</date>
+        <metadata>
+            <event>Game</event>
+            <cardNumber>5</cardNumber>
+            <camera>Cam A</camera>
+            <shooter>Tyler</shooter>
+        </metadata>
+    </file>
+    <file name="skiing.mov">
+        <uuid>00012</uuid>
+        <date>02122015</date>
+        <metadata>
+            <event>Press Conference</event>
+            <cardNumber>6</cardNumber>
+            <camera>Cam B</camera>
+            <shooter>Jon</shooter>
+        </metadata>
+    </file>
+    <file name="Test.mov">
+        <uuid>00098</uuid>
+        <date>12152015</date>
+        <metadata>
+            <event>All Star</event>
+            <cardNumber>102</cardNumber>
+            <camera>Cam A</camera>
+            <shooter>Tyler</shooter>
+        </metadata>
+    </file>
+</project>
