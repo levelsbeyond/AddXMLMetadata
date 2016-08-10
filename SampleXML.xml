@@ -29,4 +29,14 @@
             <shooter>Tyler</shooter>
         </metadata>
     </file>
+    <file name="test.json">
+        <uuid>00014</uuid>
+        <date>01062016</date>
+        <metadata>
+            <event>Birthday</event>
+            <cardNumber>6</cardNumber>
+            <camera>Cam G</camera>
+            <shooter>Mitch</shooter>
+        </metadata>
+    </file>
 </project>

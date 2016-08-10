@@ -1,0 +1,129 @@
+<!--
+  ~ Levels Beyond CONFIDENTIAL
+  ~
+  ~ Copyright 2003 - 2016 Levels Beyond Incorporated
+  ~ All Rights Reserved.
+  ~
+  ~ NOTICE:  All information contained herein is, and remains
+  ~ the property of Levels Beyond Incorporated and its suppliers,
+  ~ if any.  The intellectual and technical concepts contained
+  ~ herein are proprietary to Levels Beyond Incorporated
+  ~ and its suppliers and may be covered by U.S. and Foreign Patents,
+  ~ patents in process, and are protected by trade secret or copyright law.
+  ~ Dissemination of this information or reproduction of this material
+  ~ is unlawful and strictly forbidden unless prior written permission is obtained
+  ~ from Levels Beyond Incorporated.
+  -->
+
+<workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://levelsbeyond.com/schema/workflow"
+    xsi:schemaLocation="http://levelsbeyond.com/schema/workflow http://www.levelsbeyond.com/schema/latest/studio.xsd"
+    xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
+    id="xmlToJsonSubflow"
+    name="Convert XML to JSON Subflow"
+    description=""
+    
+    executionLabelExpression="Extracting metadata from XML"
+    deadlineExpression=""
+    subjectDOClassName=""
+    showInUserInterface="false"
+    resultDataDef="metadataJSON"
+    
+    
+    sdkVersion="5.4">
+    
+    <initialStepName>Set Video ID</initialStepName>
+    
+    <!-- Use xpath to get each field from the xml -->
+    <setContextData name="Set Video ID"
+        executionLabelExpression="Grabbing the Video ID: ${videoID}"
+        targetDataDef="videoID"
+        valueExpression="${ metadataXML.getChild('uuid').getText() }"
+        nextStep="Set Shoot Date"/>
+    
+    <setContextData name="Set Shoot Date"
+        executionLabelExpression="Getting the Shoot Date String: ${shootDateString}"
+        targetDataDef="shootDateString"
+        valueExpression="${metadataXML.getChild('date').getText()}"
+        nextStep="Parse Date String"/>
+    <!--
+    <setContextData name="Parse Date String Dev Step"
+        executionLabelExpression="Printing ${shootDateString} and its length of: ${shootDateString.length()}"
+        targetDataDef="shootDateString"
+        valueExpression="${shootDateString.substring(4,8)}-${shootDateString.substring(0,2)}-${shootDateString.substring(2,4)}"
+        devStep="true"
+        nextStep="Parse Date String"/>
+    -->
+    
+    <setContextData name="Parse Date String"
+        executionLabelExpression="Printing the date: ${shootDateString}"
+        targetDataDef="shootDate"
+        valueExpression="${#parseDate( shootDateString, 'MMddyyyy' )}"
+        nextStep="Set Event Type"/>
+    
+    
+    <setContextData name="Set Event Type"
+        executionLabelExpression="Getting the Event Type: ${eventType}"
+        targetDataDef="eventType"
+        valueExpression="${metadataXML.getChild('metadata').getChild('event').getText()}"
+        nextStep="Set Camera Card"/>
+    
+    <setContextData name="Set Camera Card"
+        executionLabelExpression="Getting the Camera Card: ${cameraCard}"
+        targetDataDef="cameraCard"
+        valueExpression="${metadataXML.getChild('metadata').getChild('cardNumber').getText()}"
+        nextStep="Set Camera"/>
+    
+    <setContextData name="Set Camera"
+        executionLabelExpression="Getting the Camera: ${camera}"
+        targetDataDef="camera"
+        valueExpression="${metadataXML.getChild('metadata').getChild('camera').getText()}"
+        nextStep="Set Shooter"/>
+    
+    <setContextData name="Set Shooter"
+        executionLabelExpression="Getting the Shooter: ${shooter}"
+        targetDataDef="shooter"
+        valueExpression="${metadataXML.getChild('metadata').getChild('shooter').getText()}"
+        nextStep="Create JSON"/>
+    
+    <!-- Groovy Step to Add the extracted xml to a json -->
+    
+    <groovyStep resultDataDef="metadataJSON" name="Create JSON"
+        nextStep="Log JSON">
+        <script>
+            <![CDATA[
+                import groovy.*;
+                import groovy.json.*;
+                                
+                metadataJSON.put("videoID", videoID);
+                metadataJSON.put("shootDate", shootDate.toString() );
+                metadataJSON.put("eventType", eventType);
+                metadataJSON.put("cameraCard", cameraCard);
+                metadataJSON.put("camera", camera);
+                metadataJSON.put("shooter", shooter);
+                
+                return metadataJSON;
+            ]]>
+        </script>
+    </groovyStep>
+
+    <noopStep name="Log JSON"
+        executionLabelExpression="${metadataJSON.toString()}" 
+        nextStep="end"/>
+    
+    <noopStep name="end"/>
+    
+    <!-- Input and output -->
+    <contextDataDef name="metadataXML" dataType="XML"/>
+    <contextDataDef name="metadataJSON" dataType="JSON" defaultDataExpression="{}"/>
+    
+    <!-- Internal Variables -->
+    <contextDataDef name="videoID"          dataType="String"/>
+    <contextDataDef name="shootDateString"  dataType="String"/>
+    <contextDataDef name="shootDate"        dataType="Date"/>
+    <contextDataDef name="eventType"        dataType="String"/>
+    <contextDataDef name="cameraCard"       dataType="String"/>
+    <contextDataDef name="camera"           dataType="String"/>
+    <contextDataDef name="shooter"          dataType="String"/>
+    
+</workflow>

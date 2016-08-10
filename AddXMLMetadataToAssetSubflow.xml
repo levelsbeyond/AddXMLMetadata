@@ -18,21 +18,129 @@
 <workflow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://levelsbeyond.com/schema/workflow"
     xsi:schemaLocation="http://levelsbeyond.com/schema/workflow http://www.levelsbeyond.com/schema/latest/studio.xsd"
+    xmlns:nimbus="http://levelsbeyond.com/schema/workflow/nimbus"
     id="addXMLMetadataToAssetSubflow"
     name="Add XML Metadata to Asset Subflow"
     description=""
     
-    executionLabelExpression=""
+    executionLabelExpression="Setting metadata on asset: ${fileXML.getAttributeValue('name')}"
     deadlineExpression=""
     subjectDOClassName=""
-    showInUserInterface="true"
+    showInUserInterface="false"
     
     
     sdkVersion="5.4">
     
-    <initialStepName>initial step</initialStepName>
+  <initialStepName>Extract XML Into JSON</initialStepName>
     
+    <!-- Kick off subflow that gets sent the xml object and returns the json object -->
+  <executeSubflowStep targetWorkflowId="xmlToJsonSubflow" name="Extract XML Into JSON"
+      executionLabelExpression="Converting the XML input to a JSON format"
+      resultDataDef="metadataJSON"
+      subjectChangePath="${fileXML}"
+      subflowTargetDataDef="metadataXML"
+      nextStep="Get File Name"/>
+    
+    <!-- Get file name -->
+    <setContextData name="Get File Name"
+      executionLabelExpression="File name is: ${fileName}"
+      targetDataDef="fileName"
+      valueExpression="${fileXML.getAttributeValue('name')}"
+      nextStep="Find Video Asset"/>
+    
+    <!-- Use name to find asset -->
+    <!-- Query step for when the asset is a timeline -->
+    <queryStep targetDataObjectClass="Timeline"
+      executionLabelExpression="Searching for a Timeline with the name: ${fileName}"
+      resultDataDef="asset" 
+      name="Find Video Asset">
+      
+      <transition condition="${asset != null}">
+        <targetStepName>Save Timeline Metadata</targetStepName>
+      </transition>
+      <transition condition="${true}">
+        <targetStepName>Find Non Timeline Asset</targetStepName>
+      </transition>
+      <criteria>
+        <![CDATA[
+            <criteria>
+                <and>
+                    <condition property="name" op="eq" >
+                        <test value="${fileName}" />
+                    </condition>
+                </and>
+            </criteria>
+        ]]>
+      </criteria>
+    </queryStep>
+  
+    <!-- Query step for the case when the asset is not a video -->
+    <queryStep targetDataObjectClass="AssetVersion"
+     executionLabelExpression="No Timeline found, searching for other assets named: ${fileName}"
+     resultDataDef="asset" 
+     name="Find Non Timeline Asset">
+    
+     <transition condition="${asset != null}">
+       <targetStepName>Save Asset Master Metadata</targetStepName>
+     </transition>
+      <transition condition="${true}">
+        <targetStepName>No Asset Found</targetStepName>
+      </transition>
+      <criteria>
+        <![CDATA[
+             <criteria>
+                 <and>
+                     <condition property="name" op="eq" >
+                         <test value="${fileName}" />
+                     </condition>
+                 </and>
+             </criteria>
+         ]]>
+      </criteria>
+    </queryStep>
+    
+    <!-- Save the json metadata onto the asset -->
+    <!-- Saving metadata onto the asset if it is a timeline -->
+    <saveDataObjectStep name="Save Timeline Metadata"
+      executionLabelExpression="Saving the converted data to the Timeline object for ${asset.name}"
+      dataObjectExpression="${asset.metadata}"
+      jsonValuesDataDef="metadataJSON"
+      nextStep="Remove Category Timeline"/>
+    
+    <!-- Saving metadata onto the asset if it is asset master -->
+    <saveDataObjectStep name="Save Asset Master Metadata"
+      executionLabelExpression="Saving the converted data to the Asset Master object for ${asset.name}"
+      dataObjectExpression="${asset.masterAsset.metadata}"
+      jsonValuesDataDef="metadataJSON"
+      nextStep="Remove Category Asset Master"/>
+  
+    <nimbus:changeMetaCategoryStep targetObjectExpression="${asset}" 
+      name="Remove Category Timeline" 
+      nextStep="end">
+      <nimbus:removeCategory>Needs Metadata</nimbus:removeCategory>
+    </nimbus:changeMetaCategoryStep>
+  
+    <nimbus:changeMetaCategoryStep targetObjectExpression="${asset}" 
+      name="Remove Category Asset Master" 
+      nextStep="end">
+      <nimbus:removeCategory>Needs Metadata</nimbus:removeCategory>
+    </nimbus:changeMetaCategoryStep>
+    
+    <!-- If neither query returns a result, then fail out -->
+    <failWorkflowStep reasonExpression="Asset not found in Reach Engine" name="No Asset Found"
+      executionLabelExpression="Asset not found in Reach Engine"
+      nextStep="end"/>
     
     <noopStep name="end"/>
+  
+    <!-- Input -->
+    <contextDataDef name="fileXML" dataType="XML" multiple="false"/>
+  
+    <!-- Input from Subflow -->
+    <contextDataDef name="metadataJSON" dataType="JSON" defaultDataExpression="{}"/>
+    
+    <!-- Internal Data Defs -->
+    <contextDataDef name="fileName" dataType="String"/>
+    <contextDataDef name="asset" dataType="Data Object"/>
     
 </workflow>

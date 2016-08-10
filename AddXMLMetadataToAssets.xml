@@ -22,7 +22,7 @@
     name="Add XML Metadata to Assets"
     description=""
     
-    executionLabelExpression=""
+    executionLabelExpression="Add XML Metadata to Assets | ${#filename(xmlFile)} | Adding metadata to ingested assets"
     deadlineExpression=""
     subjectDOClassName=""
     showInUserInterface="true"
@@ -30,14 +30,41 @@
     
     sdkVersion="5.4">
     
-    <initialStepName>initial step</initialStepName>
+  <initialStepName>Set XML Object</initialStepName>
     
     <!-- Grab the file selected as user input. -->
+    <setContextData name="Set XML Object"
+      executionLabelExpression="Saving XML data from the file: ${#filename(xmlFile)}"
+      targetDataDef="metadataXML"
+      valueExpression="${xmlFile}"
+      nextStep="Split XML"/>
     
     <!-- Use xpath to get each separate file -->
+    <setContextData name="Split XML"
+      executionLabelExpression="Number of files to process: ${fileXMLs.size()}"
+      targetDataDef="fileXMLs"
+      valueExpression="${#xpath(metadataXML, '/project/file', true)}"
+      nextStep="Process Each File"/>
     
     <!-- Kick off subflow to take care of metadata for each file -->
+    <!-- Pass in name of asset -->
+    <executeSubflowStep targetWorkflowId="addXMLMetadataToAssetSubflow" name="Process Each File"
+      executionLabelExpression="Processing each file found in the xml file"
+      subjectChangePath="${fileXMLs}"
+      subflowTargetDataDef="fileXML"
+      nextStep="end"/>
     
     <noopStep name="end"/>
+  
+    <!-- Internal Data Defs -->
+    <contextDataDef name="metadataXML" dataType="XML"/>
+    <contextDataDef name="fileXMLs" dataType="XML" multiple="true"/>
+  
+    <!-- User Input -->
+    <contextDataDef dataType="File" name="xmlFile" label="XML Metadata File" required="true" userInput="true">
+      <description>
+        The file to extract XML metadata from. Must be provided when starting the workflow.
+      </description>
+    </contextDataDef>
     
 </workflow>
