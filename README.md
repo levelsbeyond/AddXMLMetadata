@@ -24,7 +24,7 @@ Import the workflows into Reach Engine. Create the needed metadata fields if not
 
 ## Descriptions
 ### addXMLMetadataToAssets
-Takes the file that the user selects as input. It separates each "<file>" object out of the xml and creates a subflow for each one it finds.
+Takes the file that the user selects as input. It separates each "file" object out of the xml and creates a subflow for each one it finds.
 ### addXMLMetadataToAssetSubflow
 Kicks off a subflow with the XML information that returns the metadata in JSON format. It then takes the filename and queries to find that asset in Reach Engine (this works for both Timelines and other assets). The workflow fails if the asset is not in Reach Engine. After getting the asset, it assigns the JSON metadata to it and removes the "Needs Metadata" category.
 ### xmlToJsonSubflow
