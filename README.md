@@ -9,14 +9,14 @@ This set of workflows is to take a user selected file of xml formatted metadata 
 
 ## Requirements
 1. Must have the following metadata fields in Reach Engine:
-|Name|Label|Type|XML Name|
-|----|-----|----|--------|
-|videoID|videoID|Text(small)|uuid|
-|shootDate|shootDate|Date|date|
-|eventType|eventType|Text(small)|event|
-|cameraCard|cameraCard|Text(small)|cardNumber|
-|camera|camera|Text(small)|camera|
-|shooter|shooter|Text(small)|shooter|
+|Name        |Label       |Type        |XML Name    |
+|:----------:|:----------:|:----------:|:----------:|
+|videoID     |videoID     |Text(small) |uuid        |
+|shootDate   |shootDate   |Date        |date        |
+|eventType   |eventType   |Text(small) |event       |
+|cameraCard  |cameraCard  |Text(small) |cardNumber  |
+|camera      |camera      |Text(small) |camera      |
+|shooter     |shooter     |Text(small) |shooter     |
 
 2. Included is a sample XML file that shows the format that every XML file should have.
 3. The file names in the XML file need to match up with assets that are in Reach Engine already.
