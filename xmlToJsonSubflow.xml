@@ -32,62 +32,9 @@
     
     sdkVersion="5.4">
     
-    <initialStepName>Set Video ID</initialStepName>
-    
-    <!-- Use xpath to get each field from the xml -->
-    <setContextData name="Set Video ID"
-        executionLabelExpression="Grabbing the Video ID: ${videoID}"
-        targetDataDef="videoID"
-        valueExpression="${ metadataXML.getChild('uuid').getText() }"
-        nextStep="Set Shoot Date"/>
-    
-    <setContextData name="Set Shoot Date"
-        executionLabelExpression="Getting the Shoot Date String: ${shootDateString}"
-        targetDataDef="shootDateString"
-        valueExpression="${metadataXML.getChild('date').getText()}"
-        nextStep="Parse Date String"/>
-    <!--
-    <setContextData name="Parse Date String Dev Step"
-        executionLabelExpression="Printing ${shootDateString} and its length of: ${shootDateString.length()}"
-        targetDataDef="shootDateString"
-        valueExpression="${shootDateString.substring(4,8)}-${shootDateString.substring(0,2)}-${shootDateString.substring(2,4)}"
-        devStep="true"
-        nextStep="Parse Date String"/>
-    -->
-    
-    <setContextData name="Parse Date String"
-        executionLabelExpression="Printing the date: ${shootDateString}"
-        targetDataDef="shootDate"
-        valueExpression="${#parseDate( shootDateString, 'MMddyyyy' )}"
-        nextStep="Set Event Type"/>
-    
-    
-    <setContextData name="Set Event Type"
-        executionLabelExpression="Getting the Event Type: ${eventType}"
-        targetDataDef="eventType"
-        valueExpression="${metadataXML.getChild('metadata').getChild('event').getText()}"
-        nextStep="Set Camera Card"/>
-    
-    <setContextData name="Set Camera Card"
-        executionLabelExpression="Getting the Camera Card: ${cameraCard}"
-        targetDataDef="cameraCard"
-        valueExpression="${metadataXML.getChild('metadata').getChild('cardNumber').getText()}"
-        nextStep="Set Camera"/>
-    
-    <setContextData name="Set Camera"
-        executionLabelExpression="Getting the Camera: ${camera}"
-        targetDataDef="camera"
-        valueExpression="${metadataXML.getChild('metadata').getChild('camera').getText()}"
-        nextStep="Set Shooter"/>
-    
-    <setContextData name="Set Shooter"
-        executionLabelExpression="Getting the Shooter: ${shooter}"
-        targetDataDef="shooter"
-        valueExpression="${metadataXML.getChild('metadata').getChild('shooter').getText()}"
-        nextStep="Create JSON"/>
+    <initialStepName>Create JSON</initialStepName>
     
     <!-- Groovy Step to Add the extracted xml to a json -->
-    
     <groovyStep resultDataDef="metadataJSON" name="Create JSON"
         nextStep="Log JSON">
         <script>
@@ -107,9 +54,10 @@
         </script>
     </groovyStep>
 
-    <noopStep name="Log JSON"
-        executionLabelExpression="${metadataJSON.toString()}" 
-        nextStep="end"/>
+    <testStep outputExpression="${metadataJSON.toString()}" 
+        name="Log JSON" 
+        executionLabelExpression="See Logs for json output"
+        nextStep="end"></testStep>
     
     <noopStep name="end"/>
     
@@ -118,12 +66,11 @@
     <contextDataDef name="metadataJSON" dataType="JSON" defaultDataExpression="{}"/>
     
     <!-- Internal Variables -->
-    <contextDataDef name="videoID"          dataType="String"/>
-    <contextDataDef name="shootDateString"  dataType="String"/>
-    <contextDataDef name="shootDate"        dataType="Date"/>
-    <contextDataDef name="eventType"        dataType="String"/>
-    <contextDataDef name="cameraCard"       dataType="String"/>
-    <contextDataDef name="camera"           dataType="String"/>
-    <contextDataDef name="shooter"          dataType="String"/>
+    <contextDataDef name="videoID"          dataType="String" defaultDataExpression="${ metadataXML.getChild('uuid').getText() }"/>
+    <contextDataDef name="shootDate"        dataType="Date" defaultDataExpression="${#parseDate( metadataXML.getChild('date').getText(), 'MMddyyyy' )}"/>
+    <contextDataDef name="eventType"        dataType="String" defaultDataExpression="${metadataXML.getChild('metadata').getChild('event').getText()}"/>
+    <contextDataDef name="cameraCard"       dataType="String" defaultDataExpression="${metadataXML.getChild('metadata').getChild('cardNumber').getText()}"/>
+    <contextDataDef name="camera"           dataType="String" defaultDataExpression="${metadataXML.getChild('metadata').getChild('camera').getText()}"/>
+    <contextDataDef name="shooter"          dataType="String" defaultDataExpression="${metadataXML.getChild('metadata').getChild('shooter').getText()}"/>
     
 </workflow>

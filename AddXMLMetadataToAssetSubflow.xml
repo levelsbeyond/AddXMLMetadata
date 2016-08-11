@@ -46,42 +46,17 @@
       executionLabelExpression="File name is: ${fileName}"
       targetDataDef="fileName"
       valueExpression="${fileXML.getAttributeValue('name')}"
-      nextStep="Find Video Asset"/>
+      nextStep="Find Asset"/>
     
     <!-- Use name to find asset -->
-    <!-- Query step for when the asset is a timeline -->
-    <queryStep targetDataObjectClass="Timeline"
-      executionLabelExpression="Searching for a Timeline with the name: ${fileName}"
-      resultDataDef="asset" 
-      name="Find Video Asset">
-      
-      <transition condition="${asset != null}">
-        <targetStepName>Save Timeline Metadata</targetStepName>
-      </transition>
-      <transition condition="${true}">
-        <targetStepName>Find Non Timeline Asset</targetStepName>
-      </transition>
-      <criteria>
-        <![CDATA[
-            <criteria>
-                <and>
-                    <condition property="name" op="eq" >
-                        <test value="${fileName}" />
-                    </condition>
-                </and>
-            </criteria>
-        ]]>
-      </criteria>
-    </queryStep>
-  
     <!-- Query step for the case when the asset is not a video -->
     <queryStep targetDataObjectClass="AssetVersion"
-     executionLabelExpression="No Timeline found, searching for other assets named: ${fileName}"
+     executionLabelExpression="Searching for assets named: ${fileName}"
      resultDataDef="asset" 
-     name="Find Non Timeline Asset">
+     name="Find Asset">
     
      <transition condition="${asset != null}">
-       <targetStepName>Save Asset Master Metadata</targetStepName>
+       <targetStepName>Set Parent Object</targetStepName>
      </transition>
       <transition condition="${true}">
         <targetStepName>No Asset Found</targetStepName>
@@ -99,29 +74,22 @@
       </criteria>
     </queryStep>
     
-    <!-- Save the json metadata onto the asset -->
-    <!-- Saving metadata onto the asset if it is a timeline -->
-    <saveDataObjectStep name="Save Timeline Metadata"
-      executionLabelExpression="Saving the converted data to the Timeline object for ${asset.name}"
-      dataObjectExpression="${asset.metadata}"
-      jsonValuesDataDef="metadataJSON"
-      nextStep="Remove Category Timeline"/>
+    <setContextData name="Set Parent Object"
+      executionLabelExpression="Setting the parent object for the found asset"
+      targetDataDef="parentAsset"
+      valueExpression="${asset.masterAsset.assetType == 'Video'? asset.masterAsset.timelineAssets[0].timeline : asset.masterAsset}"
+      nextStep="Save Metadata"/>
     
+    <!-- Save the json metadata onto the asset -->
     <!-- Saving metadata onto the asset if it is asset master -->
-    <saveDataObjectStep name="Save Asset Master Metadata"
+    <saveDataObjectStep name="Save Metadata"
       executionLabelExpression="Saving the converted data to the Asset Master object for ${asset.name}"
-      dataObjectExpression="${asset.masterAsset.metadata}"
+      dataObjectExpression="${parentAsset.metadata}"
       jsonValuesDataDef="metadataJSON"
-      nextStep="Remove Category Asset Master"/>
-  
-    <nimbus:changeMetaCategoryStep targetObjectExpression="${asset}" 
-      name="Remove Category Timeline" 
-      nextStep="end">
-      <nimbus:removeCategory>Needs Metadata</nimbus:removeCategory>
-    </nimbus:changeMetaCategoryStep>
-  
-    <nimbus:changeMetaCategoryStep targetObjectExpression="${asset}" 
-      name="Remove Category Asset Master" 
+      nextStep="Remove Category"/>
+    
+    <nimbus:changeMetaCategoryStep targetObjectExpression="${parentAsset}" 
+      name="Remove Category" 
       nextStep="end">
       <nimbus:removeCategory>Needs Metadata</nimbus:removeCategory>
     </nimbus:changeMetaCategoryStep>
@@ -142,5 +110,6 @@
     <!-- Internal Data Defs -->
     <contextDataDef name="fileName" dataType="String"/>
     <contextDataDef name="asset" dataType="Data Object"/>
+    <contextDataDef name="parentAsset" dataType="Data Object"/>
     
 </workflow>
